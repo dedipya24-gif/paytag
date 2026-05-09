@@ -20,8 +20,11 @@ export default function SignupPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (user?.fullName) setDisplayName(user.fullName)
-  }, [user])
+    if (!user) return
+    setDisplayName(user.fullName || '')
+    // If user already has a profile, go straight to dashboard
+    fetch('/api/me').then(res => { if (res.ok) router.push('/dashboard') })
+  }, [user, router])
 
   useEffect(() => {
     if (!username || username.length < 3) { setUsernameStatus('idle'); return }
