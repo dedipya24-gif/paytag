@@ -4,7 +4,7 @@
 
 > Built for the KIRAPAY Frontier Hackathon
 
-[Live Demo](#) · [Video Demo](#) · [Project Write-Up](#)
+[Live Demo](https://paytag-beta.vercel.app) · [Video Demo](#) · [Project Write-Up](#)
 
 ---
 
