@@ -1,67 +1,87 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { NextRequest } from 'next/server'
 
-type WebhookPayload = {
-  event: string
-  data: {
-    _id: string
-    status: string
-    hash?: string
-    price?: number
-    settlementAmount?: number
-    sender?: string
-    recipient?: string
-    createdAt?: string
-  }
-}
-
 export async function POST(req: NextRequest) {
-  let payload: WebhookPayload
+  // ── Parse ──────────────────────────────────────────────────────────────────
+  let raw: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let payload: any
+
   try {
-    const raw = await req.text()
-    console.log('[WEBHOOK] Raw body received:', raw)
+    raw = await req.text()
+  } catch {
+    console.error('[WEBHOOK] ERROR: could not read body')
+    return Response.json({ error: 'Could not read body' }, { status: 400 })
+  }
+
+  // Print the full raw body prominently so it's easy to find in Vercel logs
+  console.log('=== KIRAPAY WEBHOOK RAW BODY START ===')
+  console.log(raw)
+  console.log('=== KIRAPAY WEBHOOK RAW BODY END ===')
+
+  try {
     payload = JSON.parse(raw)
   } catch {
-    console.log('[WEBHOOK] ERROR: Failed to parse JSON body')
+    console.error('[WEBHOOK] ERROR: body is not valid JSON:', raw)
     return Response.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { event, data } = payload
-  console.log('[WEBHOOK] Event:', event)
-  console.log('[WEBHOOK] Data:', JSON.stringify(data, null, 2))
+  // Log the full parsed payload with all top-level keys so we can spot schema differences
+  console.log('[WEBHOOK] Parsed payload keys:', Object.keys(payload))
+  console.log('[WEBHOOK] Full payload:', JSON.stringify(payload, null, 2))
 
-  if (event !== 'transaction.succeeded') {
-    console.log('[WEBHOOK] Ignored — not transaction.succeeded, got:', event)
+  // ── Normalise field names across KIRAPAY schema versions ───────────────────
+  // Docs show two variants:
+  //   Schema A (Webhooks page):  { event, data: { _id, recipient, sender, hash, price, settlementAmount } }
+  //   Schema B (Overview page):  { event, data: { transactionId, receiver, sender, amount, currency, settlementAmount, customOrderId } }
+  const event: string | undefined =
+    payload.event ?? payload.type ?? payload.eventType ?? payload.data?.event
+
+  const data = payload.data ?? payload
+
+  // Wallet the creator receives funds into — "recipient" (Schema A) or "receiver" (Schema B)
+  const recipientWallet: string | undefined = data.recipient ?? data.receiver
+
+  // Transaction ID — "_id" (Schema A) or "transactionId" (Schema B)
+  const txId: string | undefined = data._id ?? data.transactionId
+
+  console.log('[WEBHOOK] Resolved event:', event)
+  console.log('[WEBHOOK] Resolved recipient wallet:', recipientWallet)
+  console.log('[WEBHOOK] Resolved tx id:', txId)
+
+  // ── Filter ─────────────────────────────────────────────────────────────────
+  if (!event || event !== 'transaction.succeeded') {
+    console.log('[WEBHOOK] Ignored — event is not transaction.succeeded, got:', event)
     return Response.json({ received: true })
   }
 
-  if (!data.recipient) {
-    console.log('[WEBHOOK] ERROR: No recipient in payload — cannot match payment')
+  if (!recipientWallet) {
+    console.log('[WEBHOOK] ERROR: No recipient/receiver in payload — cannot match payment')
     return Response.json({ received: true })
   }
 
-  console.log('[WEBHOOK] Looking up creator with wallet:', data.recipient)
+  // ── Look up creator ────────────────────────────────────────────────────────
+  console.log('[WEBHOOK] Looking up creator with wallet:', recipientWallet)
 
-  // 1. Find creator by wallet address (case-insensitive)
   const { data: creator, error: creatorError } = await supabaseAdmin
     .from('users')
     .select('id, username')
-    .ilike('wallet_address', data.recipient)
+    .ilike('wallet_address', recipientWallet)
     .maybeSingle()
 
   if (creatorError) {
-    console.log('[WEBHOOK] ERROR: Supabase error looking up creator:', creatorError.message)
+    console.error('[WEBHOOK] ERROR: Supabase error looking up creator:', creatorError.message)
     return Response.json({ received: true })
   }
 
   if (!creator) {
-    console.log('[WEBHOOK] ERROR: No creator found with wallet:', data.recipient)
+    console.log('[WEBHOOK] ERROR: No creator found with wallet:', recipientWallet)
     return Response.json({ received: true })
   }
 
   console.log('[WEBHOOK] Found creator:', creator.username, '| id:', creator.id)
 
-  // 2. Find most recent pending payment for this creator
+  // ── Look up most-recent pending payment for this creator ───────────────────
   const { data: payment, error: paymentError } = await supabaseAdmin
     .from('payments')
     .select('id, amount_usd, status')
@@ -72,7 +92,7 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   if (paymentError) {
-    console.log('[WEBHOOK] ERROR: Supabase error looking up payment:', paymentError.message)
+    console.error('[WEBHOOK] ERROR: Supabase error looking up payment:', paymentError.message)
     return Response.json({ received: true })
   }
 
@@ -83,20 +103,20 @@ export async function POST(req: NextRequest) {
 
   console.log('[WEBHOOK] Found pending payment:', payment.id, '| amount:', payment.amount_usd)
 
-  // 3. Mark it succeeded
+  // ── Mark succeeded ─────────────────────────────────────────────────────────
   const { error: updateError } = await supabaseAdmin
     .from('payments')
     .update({
       status: 'succeeded',
-      tx_hash: data.hash || null,
-      settlement_amount: data.settlementAmount || null,
-      sender_address: data.sender || null,
-      kirapay_link_id: data._id,
+      tx_hash: data.hash ?? null,
+      settlement_amount: data.settlementAmount ?? null,
+      sender_address: data.sender ?? null,
+      kirapay_link_id: txId ?? null,
     })
     .eq('id', payment.id)
 
   if (updateError) {
-    console.log('[WEBHOOK] ERROR: Failed to update payment:', updateError.message)
+    console.error('[WEBHOOK] ERROR: Failed to update payment:', updateError.message)
     return Response.json({ received: true })
   }
 
