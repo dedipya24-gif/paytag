@@ -1,7 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { NextRequest } from 'next/server'
 
-// Real KIRAPAY webhook payload — no customOrderId, match via recipient wallet
 type WebhookPayload = {
   event: string
   data: {
@@ -19,48 +18,73 @@ type WebhookPayload = {
 export async function POST(req: NextRequest) {
   let payload: WebhookPayload
   try {
-    payload = await req.json()
+    const raw = await req.text()
+    console.log('[WEBHOOK] Raw body received:', raw)
+    payload = JSON.parse(raw)
   } catch {
+    console.log('[WEBHOOK] ERROR: Failed to parse JSON body')
     return Response.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
   const { event, data } = payload
+  console.log('[WEBHOOK] Event:', event)
+  console.log('[WEBHOOK] Data:', JSON.stringify(data, null, 2))
 
   if (event !== 'transaction.succeeded') {
+    console.log('[WEBHOOK] Ignored — not transaction.succeeded, got:', event)
     return Response.json({ received: true })
   }
 
   if (!data.recipient) {
+    console.log('[WEBHOOK] ERROR: No recipient in payload — cannot match payment')
     return Response.json({ received: true })
   }
 
-  // 1. Find creator by wallet address (case-insensitive — MetaMask vs KIRAPAY may differ in casing)
-  const { data: creator } = await supabaseAdmin
+  console.log('[WEBHOOK] Looking up creator with wallet:', data.recipient)
+
+  // 1. Find creator by wallet address (case-insensitive)
+  const { data: creator, error: creatorError } = await supabaseAdmin
     .from('users')
-    .select('id')
+    .select('id, username')
     .ilike('wallet_address', data.recipient)
     .maybeSingle()
 
-  if (!creator) {
+  if (creatorError) {
+    console.log('[WEBHOOK] ERROR: Supabase error looking up creator:', creatorError.message)
     return Response.json({ received: true })
   }
 
-  // 2. Find the most recent pending payment for this creator
-  const { data: payment } = await supabaseAdmin
+  if (!creator) {
+    console.log('[WEBHOOK] ERROR: No creator found with wallet:', data.recipient)
+    return Response.json({ received: true })
+  }
+
+  console.log('[WEBHOOK] Found creator:', creator.username, '| id:', creator.id)
+
+  // 2. Find most recent pending payment for this creator
+  const { data: payment, error: paymentError } = await supabaseAdmin
     .from('payments')
-    .select('id')
+    .select('id, amount_usd, status')
     .eq('creator_id', creator.id)
     .eq('status', 'pending')
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  if (!payment) {
+  if (paymentError) {
+    console.log('[WEBHOOK] ERROR: Supabase error looking up payment:', paymentError.message)
     return Response.json({ received: true })
   }
 
-  // 3. Mark it succeeded with the settlement details from KIRAPAY
-  await supabaseAdmin
+  if (!payment) {
+    console.log('[WEBHOOK] ERROR: No pending payment found for creator:', creator.username)
+    return Response.json({ received: true })
+  }
+
+  console.log('[WEBHOOK] Found pending payment:', payment.id, '| amount:', payment.amount_usd)
+
+  // 3. Mark it succeeded
+  const { error: updateError } = await supabaseAdmin
     .from('payments')
     .update({
       status: 'succeeded',
@@ -71,5 +95,11 @@ export async function POST(req: NextRequest) {
     })
     .eq('id', payment.id)
 
+  if (updateError) {
+    console.log('[WEBHOOK] ERROR: Failed to update payment:', updateError.message)
+    return Response.json({ received: true })
+  }
+
+  console.log('[WEBHOOK] SUCCESS: Payment', payment.id, 'marked as succeeded')
   return Response.json({ received: true })
 }
