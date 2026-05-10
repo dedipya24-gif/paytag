@@ -19,6 +19,7 @@ type CreateLinkParams = {
 type CreateLinkResponse = {
   url: string
   price: number
+  linkId: string
 }
 
 export async function createPaymentLink(params: CreateLinkParams): Promise<CreateLinkResponse> {
@@ -46,7 +47,9 @@ export async function createPaymentLink(params: CreateLinkParams): Promise<Creat
   }
 
   const json = await res.json()
-  return { url: json.data.url, price: json.data.price }
+  // Extract link ID from the checkout URL (last path segment)
+  const linkId = (json.data._id ?? json.data.url?.split('/').pop()) as string
+  return { url: json.data.url, price: json.data.price, linkId }
 }
 
 export async function getTransactions(page = 1, limit = 20) {
