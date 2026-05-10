@@ -35,41 +35,40 @@ export default function UnlockWidget({
   return (
     <div className="space-y-5">
       {/* Locked content card */}
-      <div className="border border-slate-200 rounded-xl p-5 bg-slate-50 relative overflow-hidden">
-        {/* Lock overlay hint */}
+      <div className="border border-[#333] rounded-xl p-5 bg-[#0a0a0a] relative overflow-hidden">
         <div className="absolute top-4 right-4">
-          <div className="w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm">
-            <Lock size={14} className="text-slate-400" />
+          <div className="w-8 h-8 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center">
+            <Lock size={14} className="text-[#888]" />
           </div>
         </div>
 
         <div className="pr-10">
-          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">
+          <p className="text-xs font-semibold text-[#888] uppercase tracking-wide mb-1">
             {unlockable.secret_type === 'link' ? 'Digital Content' : 'Secret Message'}
           </p>
-          <h2 className="text-lg font-bold text-slate-900 leading-snug">{unlockable.title}</h2>
+          <h2 className="text-lg font-bold text-[#ededed] leading-snug">{unlockable.title}</h2>
           {unlockable.description && (
-            <p className="mt-1.5 text-sm text-slate-500 leading-relaxed">{unlockable.description}</p>
+            <p className="mt-1.5 text-sm text-[#a1a1a1] leading-relaxed">{unlockable.description}</p>
           )}
         </div>
 
         {/* Blurred content preview */}
-        <div className="mt-4 h-10 bg-slate-200 rounded-lg blur-sm opacity-60" />
+        <div className="mt-4 h-10 bg-[#222] rounded-lg blur-sm opacity-60" />
       </div>
 
       {/* Price + unlock button */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-500">Price</span>
-          <span className="text-2xl font-bold text-slate-900">${unlockable.price_usd}</span>
+          <span className="text-[#888]">Price</span>
+          <span className="text-2xl font-bold text-[#ededed]">${unlockable.price_usd}</span>
         </div>
 
-        {error && <p className="text-xs text-red-500 text-center">{error}</p>}
+        {error && <p className="text-xs text-red-400 text-center">{error}</p>}
 
         <button
           onClick={handleUnlock}
           disabled={loading}
-          className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold rounded-xl transition-colors text-base flex items-center justify-center gap-2"
+          className="w-full py-3.5 bg-[#ededed] hover:bg-[#d4d4d4] disabled:opacity-40 disabled:cursor-not-allowed text-[#0a0a0a] font-bold rounded-full transition-colors text-base flex items-center justify-center gap-2"
         >
           {loading ? (
             <><Loader2 size={18} className="animate-spin" /> Preparing checkout...</>
@@ -78,7 +77,7 @@ export default function UnlockWidget({
           )}
         </button>
 
-        <p className="text-xs text-slate-400 text-center">
+        <p className="text-xs text-[#555] text-center">
           Pay with ETH, BNB, MATIC, USDC — any chain. Powered by KIRAPAY.
         </p>
       </div>

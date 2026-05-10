@@ -47,41 +47,41 @@ export default async function UserPage({ params }: Props) {
     .toUpperCase()
 
   return (
-    <main className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-12">
+    <main className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         {/* Creator profile */}
         <div className="text-center mb-8">
-          <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
+          <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center overflow-hidden">
             {creator.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={creator.avatar_url} alt={creator.display_name} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-bold text-indigo-600">{initials}</span>
+              <span className="text-2xl font-bold text-[#888]">{initials}</span>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">{creator.display_name}</h1>
-          <p className="text-sm text-slate-400 mt-0.5">@{creator.username}</p>
+          <h1 className="text-2xl font-bold text-[#ededed]">{creator.display_name}</h1>
+          <p className="text-sm text-[#888] mt-0.5">@{creator.username}</p>
           {creator.bio && (
-            <p className="mt-3 text-sm text-slate-600 leading-relaxed max-w-xs mx-auto">{creator.bio}</p>
+            <p className="mt-3 text-sm text-[#a1a1a1] leading-relaxed max-w-xs mx-auto">{creator.bio}</p>
           )}
         </div>
 
         {/* Content card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-[#111] rounded-2xl border border-[#222] p-6">
           {unlockable ? (
             <UnlockWidget unlockable={unlockable} username={creator.username} />
           ) : (
             <div className="text-center py-6">
-              <div className="mx-auto mb-3 w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center">
-                <Lock size={20} className="text-slate-400" />
+              <div className="mx-auto mb-3 w-12 h-12 bg-[#1a1a1a] border border-[#333] rounded-full flex items-center justify-center">
+                <Lock size={20} className="text-[#888]" />
               </div>
-              <p className="text-slate-500 text-sm">No content available yet.</p>
+              <p className="text-[#888] text-sm">No content available yet.</p>
             </div>
           )}
         </div>
 
-        <p className="text-center mt-6 text-xs text-slate-400">
-          <a href="/" className="hover:text-indigo-600 transition-colors">Create your own PayTag →</a>
+        <p className="text-center mt-6 text-xs text-[#555]">
+          <a href="/" className="hover:text-[#ededed] transition-colors">Create your own PayTag →</a>
         </p>
       </div>
     </main>

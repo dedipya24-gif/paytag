@@ -17,7 +17,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
 
-  // Form state
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -27,7 +26,6 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
-  // Chain selector state
   const [settlementChain, setSettlementChain] = useState<Chain>(DEFAULT_CHAIN)
   const [chainOpen, setChainOpen] = useState(false)
   const [chainSearch, setChainSearch] = useState('')
@@ -44,7 +42,6 @@ export default function DashboardPage() {
       setCreator(data.user)
       setPayments(data.payments)
       setUnlockable(data.unlockable)
-      // Initialize settlement chain from saved preference
       const storedChainId = data.user?.settlement_chain_id || DEFAULT_CHAIN.chainId
       const storedChain = SUPPORTED_CHAINS.find(c => c.chainId === storedChainId) || DEFAULT_CHAIN
       setSettlementChain(storedChain)
@@ -61,7 +58,6 @@ export default function DashboardPage() {
     load()
   }, [isLoaded, user, router])
 
-  // Close chain dropdown on outside click
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (chainDropdownRef.current && !chainDropdownRef.current.contains(e.target as Node)) {
@@ -112,8 +108,8 @@ export default function DashboardPage() {
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-slate-400" size={24} />
+      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+        <Loader2 className="animate-spin text-[#555]" size={24} />
       </div>
     )
   }
@@ -130,36 +126,36 @@ export default function DashboardPage() {
   )
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-12">
+    <main className="min-h-screen bg-[#0a0a0a] px-4 py-12">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-sm text-slate-500 mt-0.5">@{creator.username}</p>
+            <h1 className="text-2xl font-bold text-[#ededed]">Dashboard</h1>
+            <p className="text-sm text-[#888] mt-0.5">@{creator.username}</p>
           </div>
           {unlockable && (
             <a href={paytagUrl} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+              className="flex items-center gap-1.5 text-sm text-[#a1a1a1] hover:text-[#ededed] font-medium transition-colors">
               Preview <ExternalLink size={14} />
             </a>
           )}
         </div>
 
         {/* STEP 1 — Gated content */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-          <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="bg-[#111] rounded-2xl border border-[#222]">
+          <div className="px-5 py-4 border-b border-[#1a1a1a] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className={`w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center ${unlockable ? 'bg-emerald-500' : 'bg-indigo-600'}`}>1</span>
-              <Lock size={16} className="text-indigo-500" />
-              <h2 className="text-sm font-semibold text-slate-900">
+              <span className={`w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center ${unlockable ? 'bg-[#ededed] text-[#0a0a0a]' : 'bg-[#ededed] text-[#0a0a0a]'}`}>1</span>
+              <Lock size={16} className="text-[#888]" />
+              <h2 className="text-sm font-semibold text-[#ededed]">
                 {unlockable ? 'Your gated content' : 'Add your gated content'}
               </h2>
             </div>
             {unlockable && !editing && (
               <button onClick={() => { setEditing(true); setSecret('') }}
-                className="flex items-center gap-1 text-xs text-slate-500 hover:text-indigo-600 font-medium">
+                className="flex items-center gap-1 text-xs text-[#888] hover:text-[#ededed] font-medium transition-colors">
                 <Pencil size={12} /> Edit
               </button>
             )}
@@ -167,73 +163,70 @@ export default function DashboardPage() {
 
           <div className="p-5">
             {!editing && unlockable ? (
-              /* Content summary */
               <div className="space-y-2">
-                <p className="font-semibold text-slate-900">{unlockable.title}</p>
-                {unlockable.description && <p className="text-sm text-slate-500">{unlockable.description}</p>}
+                <p className="font-semibold text-[#ededed]">{unlockable.title}</p>
+                {unlockable.description && <p className="text-sm text-[#888]">{unlockable.description}</p>}
                 <div className="flex items-center gap-3 mt-1">
-                  <span className="text-sm font-bold text-emerald-600">${unlockable.price_usd} USD</span>
-                  <span className="text-xs text-slate-400">·</span>
-                  <span className="text-xs text-slate-400">{unlockable.secret_type === 'link' ? '🔗 Link' : '💬 Message'} (hidden)</span>
+                  <span className="text-sm font-bold text-[#ededed]">${unlockable.price_usd} USD</span>
+                  <span className="text-xs text-[#555]">·</span>
+                  <span className="text-xs text-[#555]">{unlockable.secret_type === 'link' ? '🔗 Link' : '💬 Message'} (hidden)</span>
                 </div>
-                {/* Settlement info */}
-                <div className="flex items-center gap-2.5 mt-3 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+                <div className="flex items-center gap-2.5 mt-3 bg-[#0a0a0a] border border-[#333] rounded-xl px-3 py-2.5">
                   <img
                     src={settlementChain.logoUrl}
                     alt={settlementChain.name}
                     className="w-5 h-5 rounded-full shrink-0"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                   />
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    You receive <strong className="text-slate-800">USDC on {settlementChain.name}</strong> to{' '}
-                    <code className="bg-slate-200 px-1 rounded text-slate-700">{creator.wallet_address.slice(0, 6)}...{creator.wallet_address.slice(-4)}</code>.
+                  <p className="text-xs text-[#a1a1a1] leading-relaxed">
+                    You receive <strong className="text-[#ededed]">USDC on {settlementChain.name}</strong> to{' '}
+                    <code className="bg-[#222] px-1 rounded text-[#888] font-mono">{creator.wallet_address.slice(0, 6)}...{creator.wallet_address.slice(-4)}</code>.
                     {' '}Fans pay from any chain — KIRAPAY converts automatically.
                   </p>
                 </div>
               </div>
             ) : (
-              /* Add / Edit form */
               <form onSubmit={saveUnlockable} className="space-y-4">
                 {!unlockable && (
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-[#888]">
                     Add the content you want to sell. Fans pay in crypto → the secret unlocks instantly.
                   </p>
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">Title</label>
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">Title</label>
                   <input type="text" value={title} onChange={e => setTitle(e.target.value)}
                     placeholder="e.g. My Figma UI Kit" maxLength={80} required
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full px-3 py-2.5 bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#555] focus:border-transparent" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">Description <span className="text-slate-400 normal-case font-normal">(optional)</span></label>
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">Description <span className="text-[#555] normal-case font-normal">(optional)</span></label>
                   <input type="text" value={description} onChange={e => setDescription(e.target.value)}
                     placeholder="Short description of what they'll get" maxLength={120}
-                    className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                    className="w-full px-3 py-2.5 bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#555] focus:border-transparent" />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">Price (USD)</label>
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">Price (USD)</label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555] text-sm font-medium">$</span>
                     <input type="number" min="0.5" step="0.01" value={price} onChange={e => setPrice(e.target.value)}
                       placeholder="10" required
-                      className="w-full pl-7 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full pl-7 pr-4 py-2.5 bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#555] focus:border-transparent" />
                   </div>
                 </div>
 
                 {/* Settlement chain selector */}
                 <div className="space-y-1.5" ref={chainDropdownRef}>
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
-                    Receive as <span className="text-indigo-600 font-semibold">USDC</span> on
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">
+                    Receive as <span className="text-[#ededed] font-semibold">USDC</span> on
                   </label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => { setChainOpen(v => !v); setChainSearch('') }}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 border border-slate-200 rounded-xl bg-white hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition-all"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 border border-[#333] rounded-xl bg-[#0a0a0a] hover:border-[#555] focus:outline-none focus:ring-1 focus:ring-[#555] text-sm transition-all"
                     >
                       <img
                         src={settlementChain.logoUrl}
@@ -241,26 +234,26 @@ export default function DashboardPage() {
                         className="w-5 h-5 rounded-full shrink-0"
                         onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
-                      <span className="flex-1 text-left font-medium text-slate-800">{settlementChain.name}</span>
-                      <span className="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded font-mono font-medium">USDC</span>
-                      <ChevronDown size={14} className={`text-slate-400 transition-transform duration-150 ${chainOpen ? 'rotate-180' : ''}`} />
+                      <span className="flex-1 text-left font-medium text-[#ededed]">{settlementChain.name}</span>
+                      <span className="text-xs text-[#888] bg-[#1a1a1a] px-1.5 py-0.5 rounded font-mono font-medium">USDC</span>
+                      <ChevronDown size={14} className={`text-[#555] transition-transform duration-150 ${chainOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     {chainOpen && (
-                      <div className="absolute top-full mt-1 left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden">
-                        <div className="px-2 pt-2 pb-1.5 border-b border-slate-100">
+                      <div className="absolute top-full mt-1 left-0 right-0 bg-[#111] border border-[#222] rounded-xl shadow-xl z-20 overflow-hidden">
+                        <div className="px-2 pt-2 pb-1.5 border-b border-[#1a1a1a]">
                           <input
                             type="text"
                             value={chainSearch}
                             onChange={e => setChainSearch(e.target.value)}
                             placeholder="Search chain..."
                             autoFocus
-                            className="w-full px-2.5 py-1.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-400 bg-slate-50"
+                            className="w-full px-2.5 py-1.5 text-sm bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#555]"
                           />
                         </div>
                         <ul className="max-h-52 overflow-y-auto py-1">
                           {filteredChains.length === 0 ? (
-                            <li className="px-3 py-3 text-sm text-slate-400 text-center">No chains found</li>
+                            <li className="px-3 py-3 text-sm text-[#555] text-center">No chains found</li>
                           ) : filteredChains.map(c => (
                             <li key={c.chainId}>
                               <button
@@ -270,7 +263,7 @@ export default function DashboardPage() {
                                   setChainOpen(false)
                                   setChainSearch('')
                                 }}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-slate-50 transition-colors ${settlementChain.chainId === c.chainId ? 'bg-indigo-50' : ''}`}
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-[#1a1a1a] transition-colors ${settlementChain.chainId === c.chainId ? 'bg-[#1a1a1a]' : ''}`}
                               >
                                 <img
                                   src={c.logoUrl}
@@ -278,10 +271,10 @@ export default function DashboardPage() {
                                   className="w-5 h-5 rounded-full shrink-0"
                                   onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                                 />
-                                <span className="flex-1 text-left font-medium text-slate-800">{c.name}</span>
-                                <span className="text-xs text-slate-400 font-mono">USDC</span>
+                                <span className="flex-1 text-left font-medium text-[#ededed]">{c.name}</span>
+                                <span className="text-xs text-[#555] font-mono">USDC</span>
                                 {settlementChain.chainId === c.chainId && (
-                                  <Check size={13} className="text-indigo-600 shrink-0" />
+                                  <Check size={13} className="text-[#ededed] shrink-0" />
                                 )}
                               </button>
                             </li>
@@ -290,17 +283,17 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-[#555]">
                     Fans pay from any chain with any token — KIRAPAY converts to USDC for you.
                   </p>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">Secret type</label>
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">Secret type</label>
                   <div className="grid grid-cols-2 gap-2">
                     {(['link', 'message'] as const).map(t => (
                       <button key={t} type="button" onClick={() => setSecretType(t)}
-                        className={`py-2 rounded-xl text-sm font-medium border transition-all ${secretType === t ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200 text-slate-600 hover:border-indigo-300'}`}>
+                        className={`py-2 rounded-full text-sm font-medium border transition-all ${secretType === t ? 'bg-[#ededed] border-[#ededed] text-[#0a0a0a]' : 'border-[#333] text-[#888] hover:border-[#555]'}`}>
                         {t === 'link' ? '🔗 Link / URL' : '💬 Text / Password'}
                       </button>
                     ))}
@@ -308,31 +301,31 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-600 uppercase tracking-wide">
+                  <label className="text-xs font-medium text-[#888] uppercase tracking-wide">
                     {secretType === 'link' ? 'Secret URL (revealed after payment)' : 'Secret message (revealed after payment)'}
                   </label>
                   {secretType === 'link' ? (
                     <input type="url" value={secret} onChange={e => setSecret(e.target.value)}
                       placeholder="https://..." required
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full px-3 py-2.5 bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#555] focus:border-transparent" />
                   ) : (
                     <textarea value={secret} onChange={e => setSecret(e.target.value)}
                       placeholder="Discord invite, password, instructions..." rows={3} required
-                      className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                      className="w-full px-3 py-2.5 bg-[#0a0a0a] border border-[#333] text-[#ededed] placeholder-[#555] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-[#555] focus:border-transparent resize-none" />
                   )}
-                  <p className="text-xs text-slate-400">Only revealed to the buyer after KIRAPAY confirms payment.</p>
+                  <p className="text-xs text-[#555]">Only revealed to the buyer after KIRAPAY confirms payment.</p>
                 </div>
 
-                {saveError && <p className="text-xs text-red-500">{saveError}</p>}
+                {saveError && <p className="text-xs text-red-400">{saveError}</p>}
 
                 <div className="flex gap-2 pt-1">
                   <button type="submit" disabled={saving}
-                    className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 text-white text-sm font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                    className="flex-1 py-2.5 bg-[#ededed] hover:bg-[#d4d4d4] disabled:opacity-40 text-[#0a0a0a] text-sm font-semibold rounded-full transition-colors flex items-center justify-center gap-2">
                     {saving ? <><Loader2 size={14} className="animate-spin" /> Saving...</> : 'Save & publish'}
                   </button>
                   {unlockable && (
                     <button type="button" onClick={() => { setEditing(false); setSaveError('') }}
-                      className="px-4 py-2.5 border border-slate-200 text-slate-600 text-sm font-medium rounded-xl hover:border-slate-300 transition-colors">
+                      className="px-4 py-2.5 border border-[#333] text-[#888] text-sm font-medium rounded-full hover:border-[#555] hover:text-[#ededed] transition-colors">
                       Cancel
                     </button>
                   )}
@@ -342,35 +335,35 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* STEP 2 — Share your link (only shown after content is added) */}
+        {/* STEP 2 — Share your link */}
         {unlockable && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <div className="bg-[#111] rounded-2xl border border-[#222] p-5">
             <div className="flex items-center gap-2 mb-3">
-              <span className="w-6 h-6 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center">2</span>
-              <p className="text-sm font-semibold text-slate-900">Share your PayTag link</p>
+              <span className="w-6 h-6 rounded-full bg-[#ededed] text-[#0a0a0a] text-xs font-bold flex items-center justify-center">2</span>
+              <p className="text-sm font-semibold text-[#ededed]">Share your PayTag link</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 truncate">
+              <div className="flex-1 bg-[#0a0a0a] border border-[#222] rounded-xl px-3 py-2.5 text-sm font-medium text-[#a1a1a1] truncate font-mono">
                 {paytagUrl}
               </div>
               <button onClick={copyLink}
-                className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors">
+                className="shrink-0 flex items-center gap-1.5 px-3 py-2.5 bg-[#ededed] hover:bg-[#d4d4d4] text-[#0a0a0a] text-sm font-semibold rounded-full transition-colors">
                 {copied ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy</>}
               </button>
             </div>
-            <p className="text-xs text-slate-400 mt-2">Drop this in your Twitter bio, Instagram, or send it directly to clients.</p>
+            <p className="text-xs text-[#555] mt-2">Drop this in your Twitter bio, Instagram, or send it directly to clients.</p>
           </div>
         )}
 
-        {/* Stats (only shown after content is added) */}
+        {/* Stats */}
         {unlockable && (
           <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div className="bg-[#111] rounded-2xl border border-[#222] p-5">
               <div className="flex items-center gap-2 mb-1">
-                <DollarSign size={16} className="text-emerald-500" />
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total received</span>
+                <DollarSign size={16} className="text-[#888]" />
+                <span className="text-xs font-semibold text-[#888] uppercase tracking-wide">Total received</span>
               </div>
-              <p className="text-2xl font-bold text-slate-900">{totalReceived > 0 ? `$${totalReceived.toFixed(2)}` : '—'}</p>
+              <p className="text-2xl font-bold text-[#ededed]">{totalReceived > 0 ? `$${totalReceived.toFixed(2)}` : '—'}</p>
               <div className="flex items-center gap-1.5 mt-0.5">
                 <img
                   src={settlementChain.logoUrl}
@@ -378,54 +371,54 @@ export default function DashboardPage() {
                   className="w-3.5 h-3.5 rounded-full"
                   onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                 />
-                <p className="text-xs text-slate-400">USDC · {settlementChain.name}</p>
+                <p className="text-xs text-[#555]">USDC · {settlementChain.name}</p>
               </div>
             </div>
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+            <div className="bg-[#111] rounded-2xl border border-[#222] p-5">
               <div className="flex items-center gap-2 mb-1">
-                <Lock size={16} className="text-indigo-500" />
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Unlocks</span>
+                <Lock size={16} className="text-[#888]" />
+                <span className="text-xs font-semibold text-[#888] uppercase tracking-wide">Unlocks</span>
               </div>
-              <p className="text-2xl font-bold text-slate-900">{successCount}</p>
-              <p className="text-xs text-slate-400 mt-0.5">completed</p>
+              <p className="text-2xl font-bold text-[#ededed]">{successCount}</p>
+              <p className="text-xs text-[#555] mt-0.5">completed</p>
             </div>
           </div>
         )}
 
         {/* Recent unlocks */}
         {unlockable && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div className="px-5 py-4 border-b border-slate-100">
-              <h2 className="text-sm font-semibold text-slate-900">Recent unlocks</h2>
+          <div className="bg-[#111] rounded-2xl border border-[#222]">
+            <div className="px-5 py-4 border-b border-[#1a1a1a]">
+              <h2 className="text-sm font-semibold text-[#ededed]">Recent unlocks</h2>
             </div>
             {payments.length === 0 ? (
               <div className="px-5 py-10 text-center">
-                <p className="text-slate-400 text-sm">No unlocks yet.</p>
-                <p className="text-slate-400 text-xs mt-1">Share your link above to start!</p>
+                <p className="text-[#555] text-sm">No unlocks yet.</p>
+                <p className="text-[#555] text-xs mt-1">Share your link above to start!</p>
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
+              <ul className="divide-y divide-[#1a1a1a]">
                 {payments.slice(0, 10).map(p => (
                   <li key={p.id} className="px-5 py-3.5 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500">
+                      <div className="w-8 h-8 rounded-full bg-[#1a1a1a] border border-[#333] flex items-center justify-center text-xs font-bold text-[#888]">
                         {p.token_in_symbol?.[0] || '?'}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-medium text-[#ededed]">
                           {p.token_in_symbol ? `Paid with ${p.token_in_symbol}` : 'Payment'}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-[#555]">
                           {p.sender_address ? `${p.sender_address.slice(0, 6)}...${p.sender_address.slice(-4)}` : 'Anonymous'}
                           {' · '}{new Date(p.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-emerald-600">
+                      <p className="text-sm font-semibold text-[#ededed]">
                         +${(p.settlement_amount || p.amount_usd || 0).toFixed(2)}
                       </p>
-                      <span className={`text-xs font-medium ${p.status === 'succeeded' ? 'text-emerald-500' : 'text-slate-400'}`}>
+                      <span className={`text-xs font-medium ${p.status === 'succeeded' ? 'text-[#888]' : 'text-[#555]'}`}>
                         {p.status}
                       </span>
                     </div>

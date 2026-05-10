@@ -1,14 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
+import { GeistMono } from 'geist/font/mono'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Providers } from './providers'
 import './globals.css'
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
-})
 
 export const metadata: Metadata = {
   title: 'PayTag — Get paid in any crypto from any chain',
@@ -23,8 +18,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${inter.variable} h-full`}>
-        <body className="min-h-full bg-white text-slate-900 font-sans antialiased">
+      <html lang="en" className={`${GeistSans.variable} ${GeistMono.variable} h-full`}>
+        <body className="min-h-full bg-[#0a0a0a] text-[#ededed] font-sans antialiased">
           <Providers>{children}</Providers>
         </body>
       </html>
