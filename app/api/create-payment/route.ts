@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         ? { chainId: creator.settlement_chain_id, address: creator.settlement_token_address }
         : undefined
 
-    const { url, linkId } = await createPaymentLink({
+    const { url } = await createPaymentLink({
       receiverWallet: creator.wallet_address,
       amountUsd: unlockable.price_usd,
       itemTitle: unlockable.title,
@@ -62,11 +62,6 @@ export async function POST(req: NextRequest) {
       redirectUrl: `${appUrl}/unlock/${payment.id}`,
       tokenOut,
     })
-
-    // Save the KIRAPAY link ID so payment-status can poll KIRAPAY directly as fallback
-    if (linkId) {
-      await supabaseAdmin.from('payments').update({ kirapay_link_id: linkId }).eq('id', payment.id)
-    }
 
     return Response.json({ checkoutUrl: url, orderId: payment.id })
   } catch (err: unknown) {

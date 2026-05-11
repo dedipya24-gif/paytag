@@ -19,7 +19,6 @@ type CreateLinkParams = {
 type CreateLinkResponse = {
   url: string
   price: number
-  linkId: string
 }
 
 export async function createPaymentLink(params: CreateLinkParams): Promise<CreateLinkResponse> {
@@ -47,22 +46,17 @@ export async function createPaymentLink(params: CreateLinkParams): Promise<Creat
   }
 
   const json = await res.json()
-  // Extract link ID from the checkout URL (last path segment)
-  const linkId = (json.data._id ?? json.data.url?.split('/').pop()) as string
-  return { url: json.data.url, price: json.data.price, linkId }
+  return { url: json.data.url, price: json.data.price }
 }
 
-export async function getTransactions(page = 1, limit = 20, key?: string) {
-  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
-  if (key) params.set('key', key)
+export async function getTransactions(page = 1, limit = 20) {
   const res = await fetch(
-    `${KIRAPAY_BASE}/wallet/transactions?${params}`,
+    `${KIRAPAY_BASE}/wallet/transactions?page=${page}&limit=${limit}`,
     { headers: { 'x-api-key': KIRAPAY_API_KEY } }
   )
   if (!res.ok) throw new Error(`KIRAPAY transactions error ${res.status}`)
   const json = await res.json()
-  // Handle both response shapes: { data: { transactions } } and { transactions } at root
-  return json.data ?? json
+  return json.data
 }
 
 // Fetch a single transaction by its KIRAPAY _id — used to recover customOrderId

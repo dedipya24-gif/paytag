@@ -24,15 +24,6 @@ export async function POST(req: NextRequest) {
 
   try {
     raw = await req.text()
-  } catch {
-    return Response.json({ error: 'Could not read body' }, { status: 400 })
-  }
-
-  console.log('=== KIRAPAY WEBHOOK RAW BODY START ===')
-  console.log(raw)
-  console.log('=== KIRAPAY WEBHOOK RAW BODY END ===')
-
-  try {
     payload = JSON.parse(raw)
   } catch {
     return Response.json({ error: 'Invalid JSON' }, { status: 400 })
