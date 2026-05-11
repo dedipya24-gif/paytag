@@ -59,17 +59,6 @@ export async function getTransactions(page = 1, limit = 20) {
   return json.data
 }
 
-// Fetch a single transaction by its KIRAPAY _id — used to recover customOrderId
-// when the webhook payload doesn't include it.
-export async function getTransactionById(id: string) {
-  const res = await fetch(`${KIRAPAY_BASE}/wallet/transactions/${id}`, {
-    headers: { 'x-api-key': KIRAPAY_API_KEY },
-  })
-  if (!res.ok) throw new Error(`KIRAPAY tx-by-id error ${res.status}`)
-  const json = await res.json()
-  return json.data ?? json
-}
-
 export async function registerWebhook(url: string, secret: string) {
   const res = await fetch(`${KIRAPAY_BASE}/webhooks`, {
     method: 'POST',

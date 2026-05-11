@@ -1,113 +1,103 @@
 import { supabaseAdmin } from '@/lib/supabase'
-import { getTransactionById } from '@/lib/kirapay'
 import { NextRequest } from 'next/server'
+
+// Per KIRAPAY docs, the transaction.succeeded webhook payload is:
+// {
+//   "event": "transaction.succeeded",
+//   "data": {
+//     "_id": "...",
+//     "status": "Success",
+//     "hash": "0x...",
+//     "price": 22.4,
+//     "settlementAmount": 22.4,
+//     "sender": "0x...",
+//     "recipient": "0x...",     // ← creator's wallet (our reconciliation key)
+//     "createdAt": "..."
+//   }
+// }
+// Note: customOrderId is NOT in the webhook payload, so we reconcile via the
+// recipient wallet + most-recent pending payment for that creator.
 
 type WebhookPayload = {
   event?: string
-  type?: string
   data?: {
     _id?: string
-    transactionId?: string
-    customOrderId?: string
+    status?: string
     hash?: string
+    settlementAmount?: number | string
     sender?: string
     recipient?: string
-    receiver?: string
-    settlementAmount?: number | string
-    tokenIn?: { symbol?: string }
+    createdAt?: string
   }
 }
 
 export async function POST(req: NextRequest) {
-  let raw: string
   let payload: WebhookPayload
 
   try {
-    raw = await req.text()
+    const raw = await req.text()
     payload = JSON.parse(raw)
   } catch {
     return Response.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const event = payload.event ?? payload.type
+  const event = payload.event
   const data = payload.data ?? {}
-  const txId = data._id ?? data.transactionId
 
-  console.log('[WEBHOOK] event=', event, 'txId=', txId)
+  console.log('[WEBHOOK] event=', event, 'tx=', data._id, 'recipient=', data.recipient)
 
   if (event !== 'transaction.succeeded') {
-    console.log('[WEBHOOK] Ignored — event is not transaction.succeeded')
     return Response.json({ received: true })
   }
 
-  if (!txId) {
-    console.error('[WEBHOOK] No transaction id in payload — cannot reconcile')
+  if (!data.recipient) {
+    console.error('[WEBHOOK] No recipient in payload — cannot reconcile')
     return Response.json({ received: true })
   }
 
-  // Resolve customOrderId — prefer the webhook body, fall back to fetching the tx
-  let customOrderId = data.customOrderId
-  let fullTx: Record<string, unknown> = data as Record<string, unknown>
-
-  if (!customOrderId) {
-    try {
-      const tx = await getTransactionById(txId)
-      fullTx = tx as Record<string, unknown>
-      customOrderId = (tx?.customOrderId ?? tx?.customOrderID) as string | undefined
-      console.log('[WEBHOOK] Resolved customOrderId from tx fetch:', customOrderId)
-    } catch (err) {
-      console.error('[WEBHOOK] Failed to fetch tx for customOrderId:', err)
-    }
-  }
-
-  if (!customOrderId) {
-    console.error('[WEBHOOK] No customOrderId — cannot reconcile')
-    return Response.json({ received: true })
-  }
-
-  // Look up our pending payment by id = customOrderId
-  const { data: payment, error: paymentError } = await supabaseAdmin
-    .from('payments')
-    .select('id, status')
-    .eq('id', customOrderId)
+  // Find creator by recipient wallet (case-insensitive — MetaMask checksums)
+  const { data: creator } = await supabaseAdmin
+    .from('users')
+    .select('id, username')
+    .ilike('wallet_address', data.recipient)
     .maybeSingle()
 
-  if (paymentError) {
-    console.error('[WEBHOOK] Supabase error looking up payment:', paymentError.message)
+  if (!creator) {
+    console.log('[WEBHOOK] No creator for wallet:', data.recipient)
     return Response.json({ received: true })
   }
+
+  // Find most-recent pending payment for this creator
+  const { data: payment } = await supabaseAdmin
+    .from('payments')
+    .select('id, status')
+    .eq('creator_id', creator.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
 
   if (!payment) {
-    console.log('[WEBHOOK] No matching payment for customOrderId — ignoring:', customOrderId)
+    console.log('[WEBHOOK] No pending payment for creator:', creator.username)
     return Response.json({ received: true })
   }
 
-  // Idempotency: if already succeeded, skip silently — safe to replay
+  // Idempotency — safe to replay duplicate webhooks
   if (payment.status === 'succeeded') {
-    console.log('[WEBHOOK] Payment already succeeded — skipping:', payment.id)
     return Response.json({ received: true, idempotent: true })
   }
 
-  // Update payment to succeeded
   const settlementAmount =
-    fullTx.settlementAmount != null ? parseFloat(String(fullTx.settlementAmount)) : null
-  const tokenInSymbol =
-    (fullTx.tokenIn as { symbol?: string } | undefined)?.symbol ?? null
-  const txHash =
-    (fullTx.inputTransactionHash as string | undefined) ??
-    (fullTx.hash as string | undefined) ??
-    null
-  const sender = (fullTx.sender as string | undefined) ?? null
+    data.settlementAmount != null ? parseFloat(String(data.settlementAmount)) : null
 
   const { error: updateError } = await supabaseAdmin
     .from('payments')
     .update({
       status: 'succeeded',
-      tx_hash: txHash,
+      tx_hash: data.hash ?? null,
       settlement_amount: settlementAmount,
-      sender_address: sender,
-      kirapay_link_id: txId,
-      token_in_symbol: tokenInSymbol,
+      sender_address: data.sender ?? null,
+      kirapay_link_id: data._id ?? null,
     })
     .eq('id', payment.id)
 
@@ -116,6 +106,6 @@ export async function POST(req: NextRequest) {
     return Response.json({ received: true })
   }
 
-  console.log('[WEBHOOK] SUCCESS: Payment', payment.id, 'marked as succeeded')
+  console.log('[WEBHOOK] SUCCESS — payment', payment.id, 'marked succeeded')
   return Response.json({ received: true })
 }
