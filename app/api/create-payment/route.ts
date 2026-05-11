@@ -44,7 +44,9 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'Failed to create payment record' }, { status: 500 })
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   try {
     const tokenOut =
@@ -66,7 +68,7 @@ export async function POST(req: NextRequest) {
       await supabaseAdmin.from('payments').update({ kirapay_link_id: linkId }).eq('id', payment.id)
     }
 
-    return Response.json({ checkoutUrl: url })
+    return Response.json({ checkoutUrl: url, orderId: payment.id })
   } catch (err: unknown) {
     await supabaseAdmin.from('payments').delete().eq('id', payment.id)
     const msg = err instanceof Error ? err.message : 'KIRAPAY error'

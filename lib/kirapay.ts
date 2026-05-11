@@ -52,14 +52,17 @@ export async function createPaymentLink(params: CreateLinkParams): Promise<Creat
   return { url: json.data.url, price: json.data.price, linkId }
 }
 
-export async function getTransactions(page = 1, limit = 20) {
+export async function getTransactions(page = 1, limit = 20, key?: string) {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) })
+  if (key) params.set('key', key)
   const res = await fetch(
-    `${KIRAPAY_BASE}/wallet/transactions?page=${page}&limit=${limit}`,
+    `${KIRAPAY_BASE}/wallet/transactions?${params}`,
     { headers: { 'x-api-key': KIRAPAY_API_KEY } }
   )
   if (!res.ok) throw new Error(`KIRAPAY transactions error ${res.status}`)
   const json = await res.json()
-  return json.data
+  // Handle both response shapes: { data: { transactions } } and { transactions } at root
+  return json.data ?? json
 }
 
 export async function registerWebhook(url: string, secret: string) {
